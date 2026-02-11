@@ -31,13 +31,19 @@ WHERE release_date BETWEEN DATE '2018-01-01' AND DATE '2020-12-31';
 -- 4. Исполнители, чьё имя состоит из одного слова
 SELECT musician_name
 FROM musicians
-WHERE musician_name LIKE '% %';
+WHERE musician_name NOT LIKE '% %';
 
 -- 5. Название треков, которые содержат слово «мой» или «my»
 SELECT track_name
 FROM tracks
-WHERE track_name ILIKE '%my%' 
-  OR track_name ILIKE '%мой%';
+WHERE track_name ILIKE 'my' 
+   OR track_name ILIKE 'my %' 
+   OR track_name ILIKE '% my' 
+   OR track_name ILIKE '% my %'
+   OR track_name ILIKE 'мой'
+   OR track_name ILIKE 'мой %'
+   OR track_name ILIKE '% мой'
+   OR track_name ILIKE '% мой %';
 
 
    -- ЗАДАНИЕ 3
@@ -70,6 +76,20 @@ ORDER BY mean_size DESC;
 -- 4. Все исполнители, которые не выпустили альбомы в 2020 году
 SELECT m.musician_name
 FROM musicians m
-LEFT JOIN discography d ON d.musician_id = m.musician_id
-LEFT JOIN albums a ON a.album_id = d.album_id
-WHERE EXTRACT(YEAR FROM a.release_date) != 2020;
+WHERE m.musician_name NOT IN (
+    SELECT m.musician_name
+    FROM musicians m
+    JOIN discography d ON d.musician_id  = m.musician_id
+    JOIN albums a ON a.album_id = d.album_id
+    WHERE EXTRACT(YEAR FROM a.release_date) = 2020
+);
+
+-- 5. Названия сборников, в которых присутствует конкретный исполнитель (Diana Krall)
+SELECT c.collection_name
+FROM collections c
+JOIN track_collection tc ON tc.collection_id  = c.collection_id
+JOIN tracks t ON t.track_id = tc.track_id
+JOIN albums a ON a.album_id  = t.album_id
+JOIN discography d ON d.album_id  = a.album_id
+JOIN musicians m  ON m.musician_id  = d.musician_id
+WHERE m.musician_name  = 'Diana Krall';
